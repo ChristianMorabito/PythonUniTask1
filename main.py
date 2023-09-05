@@ -1,28 +1,44 @@
-import random
+import random as r
 
 
 def game_menu(arg_choice=None) -> None:
-    if not arg_choice:
+    if not game_started:
         print("\nWelcome to card game. You have the following options:")
     print("1. start game\n2. pick a card\n3. shuffle deck\n4. show my cards\n5. check win or lose\n6. exit\n")
     if arg_choice and arg_choice[0] == 1:
-        if game_loop:
+        if game_started:
             print("Game ALREADY started!")
         else:
             print(deck)
             print("Game has now begun. Pick card or view cards.")
+    elif arg_choice and arg_choice[0] == 2:
+        print(f"You picked {player_hand[-1]}")
 
 
 
 
-def create_deck(pick) -> None:
+def create_deck(pick) -> list[str]:
     global deck
     suits = SUITS_1 if pick == 1 else SUITS_2 if pick == 2 else SUITS_3
     deck = [value + suit for suit in suits for value in VALUES]
+    return suits
 
 
-def shuffle_deck() -> None:
-    random.shuffle(deck)
+def shuffle_deck(suit_selection=None) -> None:
+    low, mid, high = 0, (len(deck) - 1) // 2, len(deck) - 1
+    if suit_selection:
+        suit = SUITS_1 if suit_selection == 1 else SUITS_2 if suit_selection == 2 else SUITS_3
+        low_suits, mid_suits, high_suits = 0, (len(suit) - 1) // 2, len(suit) - 1
+        A_card = deck.index("A" + suit[low_suits])
+        Q_card = deck.index("Q" + suit[mid_suits])
+        K_card = deck.index("K" + suit[high_suits])
+        deck[low], deck[A_card] = deck[A_card], deck[low]
+        deck[mid], deck[Q_card] = deck[Q_card], deck[mid]
+        deck[high], deck[K_card] = deck[K_card], deck[high]
+    left_half, right_half = deck[low+1:mid], deck[mid+1:high]
+    r.shuffle(left_half)
+    r.shuffle(right_half)
+    deck[low+1:mid], deck[mid+1:high] = left_half, right_half
 
 
 def pick_card() -> None:
@@ -31,11 +47,29 @@ def pick_card() -> None:
     returns it. The picked card is then removed from the deck. Both the player and the robot will
     be picking cards from the same deck.
     """
-    global player_hand, bot_hand
-    if not game_loop:
+    if not game_started:
         return
-    player_hand.append(deck.pop(random.randint(0, len(deck))))
-    bot_hand.append(deck.pop(random.randint(0, len(deck))))
+    while True:
+        player_rand = r.randint(1, len(deck)-2)
+        player_card = deck[player_rand]
+        if player_card and player_card != "_":
+            break
+        print(f"player card was {player_card} hence next loop")
+
+    player_hand.append(player_card)
+    deck[player_rand] = "_"
+
+    while True:
+        bot_rand = r.randint(1, len(deck)-2)
+        bot_card = deck[bot_rand]
+        if bot_card and bot_card != "_":
+            break
+        print(f"bot card was {bot_card} hence next loop")
+
+    bot_hand.append(bot_card)
+    deck[bot_rand] = "_"
+
+
 
 
 
@@ -52,7 +86,7 @@ def check_result(player_cards, robot_cards, suits) -> bool:
 
 
 def play_game() -> None:
-    global deck, game_loop
+    global game_started
     pick = []
     while True:
         try:
@@ -76,26 +110,25 @@ def play_game() -> None:
                 pass
             finally:
                 pick[1] = second_input
-        if not game_loop:
-            create_deck(pick)
+        if not game_started:
+            create_deck(pick[1])
         game_menu(pick)
-        game_loop = True
+        shuffle_deck(pick[1])
+        game_started = True
+
+
 
     elif pick[0] == 2:
-        pass
+        pick_card()
+        game_menu(pick)
     elif pick[0] == 3:
         shuffle_deck()
-
-
 
 
 def main():
     game_menu()
     while main_loop:
         play_game()
-        # while game_loop:
-        #     pass
-
 
 
 SUITS_1 = ["♥", "♦", "♣", "♠"]
@@ -106,7 +139,7 @@ deck = []
 player_hand = []
 bot_hand = []
 main_loop = True
-game_loop = False
+game_started = False
 
 if __name__ == '__main__':
     main()
