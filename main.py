@@ -15,8 +15,6 @@ def game_menu(arg_choice=None) -> None:
         print(f"You picked {player_hand[-1]}")
 
 
-
-
 def create_deck(pick) -> list[str]:
     global deck
     suits = SUITS_1 if pick == 1 else SUITS_2 if pick == 2 else SUITS_3
@@ -25,20 +23,24 @@ def create_deck(pick) -> list[str]:
 
 
 def shuffle_deck(suit_selection=None) -> None:
+    global deck, mid_card
     low, mid, high = 0, (len(deck) - 1) // 2, len(deck) - 1
     if suit_selection:
         suit = SUITS_1 if suit_selection == 1 else SUITS_2 if suit_selection == 2 else SUITS_3
         low_suits, mid_suits, high_suits = 0, (len(suit) - 1) // 2, len(suit) - 1
-        A_card = deck.index("A" + suit[low_suits])
-        Q_card = deck.index("Q" + suit[mid_suits])
-        K_card = deck.index("K" + suit[high_suits])
-        deck[low], deck[A_card] = deck[A_card], deck[low]
-        deck[mid], deck[Q_card] = deck[Q_card], deck[mid]
-        deck[high], deck[K_card] = deck[K_card], deck[high]
-    left_half, right_half = deck[low+1:mid], deck[mid+1:high]
-    r.shuffle(left_half)
-    r.shuffle(right_half)
-    deck[low+1:mid], deck[mid+1:high] = left_half, right_half
+        a_card = deck.index("A" + suit[low_suits])
+        q_card = deck.index("Q" + suit[mid_suits])
+        k_card = deck.index("K" + suit[high_suits])
+        deck[low], deck[a_card] = deck[a_card], deck[low]
+        deck[mid], deck[q_card] = deck[q_card], deck[mid]
+        deck[high], deck[k_card] = deck[k_card], deck[high]
+        mid_card = (deck[mid])
+
+    shuffled_deck = deck[low+1:high]
+    deck.clear()
+    deck = shuffled_deck
+    deck[mid], deck.index(mid_card) = deck.index(mid_card), deck[mid]
+
 
 
 def pick_card() -> None:
@@ -49,29 +51,28 @@ def pick_card() -> None:
     """
     if not game_started:
         return
+
     while True:
         player_rand = r.randint(1, len(deck)-2)
         player_card = deck[player_rand]
-        if player_card and player_card != "_":
+        if player_card != mid_card[0]:
             break
         print(f"player card was {player_card} hence next loop")
 
     player_hand.append(player_card)
-    deck[player_rand] = "_"
+    deck.remove(deck[player_rand])
 
     while True:
         bot_rand = r.randint(1, len(deck)-2)
         bot_card = deck[bot_rand]
-        if bot_card and bot_card != "_":
+        if bot_card != mid_card[0]:
             break
         print(f"bot card was {bot_card} hence next loop")
 
     bot_hand.append(bot_card)
-    deck[bot_rand] = "_"
+    deck.remove(deck[bot_rand])
 
-
-
-
+    print(deck)
 
 def show_cards(player_cards) -> None:
     """
@@ -116,8 +117,6 @@ def play_game() -> None:
         shuffle_deck(pick[1])
         game_started = True
 
-
-
     elif pick[0] == 2:
         pick_card()
         game_menu(pick)
@@ -136,6 +135,7 @@ SUITS_2 = ["😃", "😈", "😵", "🤢", "😨"]
 SUITS_3 = ["🤡", "👹", "👺", "👻", "👽", "👾", "🤖"]
 VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 deck = []
+mid_card = ""
 player_hand = []
 bot_hand = []
 main_loop = True
