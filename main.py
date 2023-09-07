@@ -31,12 +31,14 @@ def game_menu(choice=None) -> None:
         print("Cards shuffled")
     elif choice[0] == 4:
         print(f"Your current hand is {show_cards()}")
+    elif choice[0] == 5:
+        print("You are the winner!!!" if winner["player"] else "You lose! Bot won...\nTry again!")
 
 
 def create_deck(pick) -> None:
     global deck, suit
     suit = SUITS_1 if pick == 1 else SUITS_2 if pick == 2 else SUITS_3
-    deck = [f"{value} of {card}" for card in suit for value in VALUES]
+    deck = [f"{value}{card}" for card in suit for value in VALUES]
 
 
 def shuffle_deck() -> None:
@@ -53,7 +55,7 @@ def shuffle_deck() -> None:
         mid_card = deck[mid]
 
     if game_started:
-        new_deck = deck[low+1:high]
+        new_deck = deck[low + 1:high]
         r.shuffle(new_deck)
         new_deck = [deck[low]] + new_deck + [deck[high]]
         deck.clear()
@@ -69,7 +71,7 @@ def pick_card() -> None:
 
     def avoid_mid_card():
         while True:
-            random_int = r.randint(1, len(deck)-2)
+            random_int = r.randint(1, len(deck) - 2)
             card = deck[random_int]
             if card != mid_card:
                 break
@@ -84,34 +86,94 @@ def pick_card() -> None:
         bot_hand.append(bot_card)
         deck.remove(deck[bot_rand])
     turn -= 1
-    if turn == 0:
-        game_started = False
 
 
 def show_cards() -> str:
-    return ' '.join(player_hand) if player_hand else "empty."
+    return ''.join(player_hand) if player_hand else "empty."
 
 
-def same_value_check(cards_list) -> bool:
-    if len(cards_list) < len(suit):
-        return False
-    card_set = set()
-    for card in cards_list:
+def suit_value_check(hand) -> int:
+    hand_values = {card[:-1]: set() for card in hand}
+    count = 0
+    for i, value in enumerate(hand_values):
+        for j in range(i, len(hand)):
+            curr_value, curr_suit = hand[j][:-1], hand[j][-1]
+            if value == curr_value:
+                hand_values[value].add(curr_suit)
+        count = max(count, len(hand_values[value]))
+    print(hand_values)
+    return count
 
+
+def score_count(hand):
+    card_value = {"A": 1, "J": 11, "Q": 12, "K": 13}
+    count = 0
+    for card in hand:
+        count += int(card[:-1] if card[:-1].isdigit() else card_value[card[:-1]])
+    return count / len(hand)
+
+
+def win_check(player_condition, bot_condition) -> bool:
+    if player_condition:
+        winner["player"] = True
+    if bot_condition:
+        winner["bot"] = True
+    if winner["player"] or winner["bot"]:
+        return True
+    return False
+
+
+def win_pick(condition) -> None:
+    if condition:
+        winner["player"] = True
+    else:
+        winner["bot"] = True
 
 
 def check_result() -> None:
-    if same_value_check(player_hand):
-        winner["player"] = True
-    if same_value_check(bot_hand):
-        winner["bot"] = True
+    if not player_hand or not bot_hand:
+        win_pick(player_hand)
+        return
+
+    if len(player_hand) >= len(suit):
+        player_suit_value_count = suit_value_check(player_hand)
+        bot_suit_value_count = suit_value_check(bot_hand)
+
+        if win_check(player_suit_value_count == len(suit), bot_suit_value_count == len(suit)) or \
+           win_check(player_suit_value_count == len(suit)-1, bot_suit_value_count == len(suit)-1):
+            return
+
+    if len(player_hand) > 2:
+        player_count = len([item for item in player_hand[2:] if item[-1] == player_hand[1][-1]])
+        bot_count = len([item for item in bot_hand[2:] if item[-1] == bot_hand[1][-1]])
+        if player_count != bot_count:
+            win_pick(player_count > bot_count)
+            return
+
+    player_score, bot_score = score_count(player_hand), score_count(bot_hand)
+    win_pick(player_score > bot_score)
+
+
+def reset():
+    global suit, deck, mid_card, player_hand, bot_hand, winner, game_started, winner_chosen, turn
+    suit.clear()
+    deck.clear()
+    mid_card = ""
+    player_hand.clear()
+    bot_hand.clear()
+    winner["player"] = False
+    winner["bot"] = False
+    game_started = False
+    winner_chosen = False
+    turn = 6
 
 
 
 
 def play_game() -> None:
-    global game_started, main_loop
+    global game_started, main_loop, winner_chosen
     pick = []
+
     while True:
         try:
             player_input = input("Please enter your selection: ").strip().split(" ", 1)
@@ -141,8 +203,9 @@ def play_game() -> None:
         pick_card()
     elif pick[0] == 3:
         shuffle_deck()
-    elif pick[0] == 5:
+    if turn == 0 or pick[0] == 5:  # TODO: FIX IF PLAYER TYPES 2, what it prints in game_menu()
         check_result()
+        winner_chosen = True
     elif pick[0] == 6:
         main_loop = False
 
@@ -156,6 +219,9 @@ def main():
     game_menu()
     while main_loop:
         play_game()
+        if winner_chosen:
+            reset()
+
 
 
 SUITS_1 = ["♥", "♦", "♣", "♠"]
@@ -166,10 +232,11 @@ suit = []
 deck = []
 mid_card = ""
 player_hand = []
-winner = {"player": False, "bot": False}
 bot_hand = []
+winner = {"player": False, "bot": False}
 main_loop = True
 game_started = False
+winner_chosen = False
 turn = 6
 
 if __name__ == '__main__':
