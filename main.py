@@ -1,44 +1,75 @@
 import random as r
 
 
-def invalid_game_state(choice) -> bool:
-    if choice == 1 and game_started:
-        print("Game ALREADY started!")
+def game_state_check(choice) -> bool:
+    main_option = "Welcome to card game. You have the following options\n" + \
+                  "1. start game (+ OPTIONS ALLOWED)\n" + \
+                  "2. pick a card\n" \
+                  "3. shuffle deck\n" \
+                  "4. show my cards\n" \
+                  "5. check win or lose\n" \
+                  "6. exit\n"
+
+
+    suit_option = "OPTIONS: select between 3 different suit types\n" \
+                  "Type: 1 1 for default:     ♥ ♦ ♣ ♠\n" \
+                  "      1 2 for expression:  😃 😈 😵 🤢 😨\n" \
+                  "      1 3 for wacky:       🤡 👹 👺 👻 👽 👾 🤖\n"
+    if not choice:
+        print("\n" + main_option)
+        print(suit_option)
+    elif choice == 1 and game_started:
+        print("\n_________________Game ALREADY started!_________________\n")
+        print(main_option)
     elif 1 < choice < 6 and not game_started:
-        print("Game has NOT started")
+        print("\n___________________Game NOT started!___________________\n")
+        print(main_option)
+        print(suit_option)
     else:
+        print("\n_______________________________________________________\n")
+        print(main_option)
         return False
     return True
 
 
+def deck_print():
+    deck_string = ""
+    for i, card in enumerate(deck):
+        if i == 0 or i % len(VALUES) != len(VALUES) - 1:
+            deck_string += card + "  \t"
+        else:
+            deck_string += card + "\n"
+    print(deck_string)
+
+
 def game_menu(choice=None) -> None:
-    # TODO: DON'T LET THE GAME_MENU FUNCTION
-    if choice and choice[0] == 6:
-        print("Exiting...")
+    if choice:
+        if choice[0] == 6:
+            print("Exiting...")
+            return
+        elif choice[0] == 1 and not game_started:
+            deck_print()
+            print("Game has begun!!")
+    if game_started:
+        if choice[0] == 2:
+            print("\nCard Selected:\tYou picked " + player_hand[-1] +
+                  ("\nYou have 1 last turn!" if turn == 1 else ""))
+        elif choice[0] == 3:
+            print("\nCards sHuFfLeD")
+        elif choice[0] == 4:
+            print(f"\nYour current hand is {show_cards()}")
+        elif choice[0] == 5:
+            # TODO: PRINT WHY PLAYER/BOT WON & WRITE CODE TO ACCOUNT FOR IF BOTH PLAYERS WIN
+            print("\nYou are the winner!!!" if winner["player"] else "\nYou lose! Bot won...\nTry again!")
+
+    if game_state_check(None if not choice else choice[0]):
         return
-    print("\nWelcome to card game. You have the following options\n"
-          "1. start game\n2. pick a card\n3. shuffle deck\n4. show my cards\n5. check win or lose\n6. exit\n")
-    if not choice or invalid_game_state(choice[0]):
-        return
-    if choice[0] == 1:  # TODO: PRINT OUT DIFFERENT CARD OPTIONS TO BEGIN THE GAME WITH
-        print(deck)
-        print("Game has now begun. Pick card or view cards.")
-    elif choice[0] == 2:
-        print(f"You picked {player_hand[-1]}")
-        if turn == 1:
-            print("You have 1 last turn!!")
-    elif choice[0] == 3:
-        print("Cards shuffled")
-    elif choice[0] == 4:
-        print(f"Your current hand is {show_cards()}")
-    elif choice[0] == 5:
-        print("You are the winner!!!" if winner["player"] else "You lose! Bot won...\nTry again!")
 
 
 def create_deck(pick) -> None:
     global deck, suit
-    suit = SUITS_1 if pick == 1 else SUITS_2 if pick == 2 else SUITS_3
-    deck = [f"{value}{card}" for card in suit for value in VALUES]
+    suit.extend(SUITS_1 if pick == 1 else SUITS_2 if pick == 2 else SUITS_3)
+    deck.extend([f"{value}{card}" for card in suit for value in VALUES])
 
 
 def shuffle_deck() -> None:
@@ -89,7 +120,7 @@ def pick_card() -> None:
 
 
 def show_cards() -> str:
-    return ''.join(player_hand) if player_hand else "empty."
+    return ' '.join(player_hand) if player_hand else "empty."
 
 
 def suit_value_check(hand) -> int:
@@ -101,7 +132,6 @@ def suit_value_check(hand) -> int:
             if value == curr_value:
                 hand_values[value].add(curr_suit)
         count = max(count, len(hand_values[value]))
-    print(hand_values)
     return count
 
 
@@ -168,8 +198,6 @@ def reset():
     turn = 6
 
 
-
-
 def play_game() -> None:
     global game_started, main_loop, winner_chosen
     pick = []
@@ -203,13 +231,13 @@ def play_game() -> None:
         pick_card()
     elif pick[0] == 3:
         shuffle_deck()
-    if turn == 0 or pick[0] == 5:  # TODO: FIX IF PLAYER TYPES 2, what it prints in game_menu()
+    if turn == 0 or pick[0] == 5:
         check_result()
         winner_chosen = True
     elif pick[0] == 6:
         main_loop = False
 
-    game_menu(pick)
+    game_menu([5] if turn == 0 else pick)
     if not game_started and pick[0] == 1:
         shuffle_deck()
         game_started = True
