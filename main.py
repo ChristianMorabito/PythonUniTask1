@@ -13,7 +13,7 @@ def game_state_check(choice) -> bool:
 
     suit_option = "OPTIONS: select between 3 different suit types\n" \
                   "Type: 1 1 for default:     ♥ ♦ ♣ ♠\n" \
-                  "      1 2 for expression:  😃 😈 😵 🤢 😨\n" \
+                  "      1 2 for expressions: 😃 😈 😵 🤢 😨\n" \
                   "      1 3 for wacky:       🤡 👹 👺 👻 👽 👾 🤖\n"
     if not choice:
         print("\n" + main_option)
@@ -32,14 +32,16 @@ def game_state_check(choice) -> bool:
     return True
 
 
-def deck_print():
-    deck_string = ""
+def deck_print() -> str:
+    deck_string = "\nYou selected the " + ("'default'" if suit == SUITS_1 else
+                                           "'expressions'" if suit == SUITS_2 else
+                                           "'wacky'") + " deck.\n\n"
     for i, card in enumerate(deck):
         if i == 0 or i % len(VALUES) != len(VALUES) - 1:
             deck_string += card + "  \t"
         else:
             deck_string += card + "\n"
-    print(deck_string)
+    return deck_string + "\nThe deck has now been shuffled. Game has begun!!"
 
 
 def game_menu(choice=None) -> None:
@@ -48,8 +50,7 @@ def game_menu(choice=None) -> None:
             print("Exiting...")
             return
         elif choice[0] == 1 and not game_started:
-            deck_print()
-            print("Game has begun!!")
+            print(deck_print())
     if game_started:
         if choice[0] == 2:
             print("\nCard Selected:\tYou picked " + player_hand[-1] +
@@ -57,10 +58,12 @@ def game_menu(choice=None) -> None:
         elif choice[0] == 3:
             print("\nCards sHuFfLeD")
         elif choice[0] == 4:
-            print(f"\nYour current hand is {show_cards()}")
+            print("\nYour current hand is " + show_cards(player_hand))
         elif choice[0] == 5:
-            # TODO: PRINT WHY PLAYER/BOT WON & WRITE CODE TO ACCOUNT FOR IF BOTH PLAYERS WIN
-            print("\nYou are the winner!!!" if winner["player"] else "\nYou lose! Bot won...\nTry again!")
+            print("\n" + ("You are the winner!!!" if winner["player"] else "You lose! Bot won...") +
+                  "\nThis is because " + win_string)
+            print(f"Your hand was:\t {show_cards(player_hand)}")
+            print(f"Bot's hand was:\t {show_cards(bot_hand)}")
 
     if game_state_check(None if not choice else choice[0]):
         return
@@ -119,8 +122,8 @@ def pick_card() -> None:
     turn -= 1
 
 
-def show_cards() -> str:
-    return ' '.join(player_hand) if player_hand else "empty."
+def show_cards(hand) -> str:
+    return " ".join(hand) if hand else "empty."
 
 
 def suit_value_check(hand) -> int:
@@ -143,49 +146,52 @@ def score_count(hand):
     return count / len(hand)
 
 
-def win_check(player_condition, bot_condition) -> bool:
-    if player_condition:
-        winner["player"] = True
-    if bot_condition:
-        winner["bot"] = True
-    if winner["player"] or winner["bot"]:
-        return True
-    return False
+def winner_check(condition, player) -> bool:
+    winner[player] = condition
+    return condition
 
 
-def win_pick(condition) -> None:
-    if condition:
-        winner["player"] = True
+def win_reason(reason):
+    global win_string
+
+    if not reason:
+        win_string += "you had an empty hand." if winner["bot"] else "bot had an empty hand."
+
     else:
-        winner["bot"] = True
+        win_string += ("you " if winner["player"] else "bot ") + reason
+
 
 
 def check_result() -> None:
-    if not player_hand or not bot_hand:
-        win_pick(player_hand)
-        return
+    if winner_check(not player_hand, "bot") or winner_check(not bot_hand, "player"):
+        return win_reason(None)
 
     if len(player_hand) >= len(suit):
         player_suit_value_count = suit_value_check(player_hand)
         bot_suit_value_count = suit_value_check(bot_hand)
 
-        if win_check(player_suit_value_count == len(suit), bot_suit_value_count == len(suit)) or \
-           win_check(player_suit_value_count == len(suit)-1, bot_suit_value_count == len(suit)-1):
-            return
+        if winner_check(player_suit_value_count == len(suit), "player") or \
+           winner_check(bot_suit_value_count == len(suit), "bot"):
+            return win_reason("held the same value card for all defined suits.")
+
+        if winner_check(player_suit_value_count == len(suit)-1, "player") or \
+           winner_check(bot_suit_value_count == len(suit)-1, "bot"):
+            return win_reason(f"held the same value card for {len(suit)-1} consecutive suits.")
 
     if len(player_hand) > 2:
-        player_count = len([item for item in player_hand[2:] if item[-1] == player_hand[1][-1]])
-        bot_count = len([item for item in bot_hand[2:] if item[-1] == bot_hand[1][-1]])
-        if player_count != bot_count:
-            win_pick(player_count > bot_count)
-            return
+        player_suit_count = len([item for item in player_hand[2:] if item[-1] == player_hand[1][-1]])
+        bot_suit_count = len([item for item in bot_hand[2:] if item[-1] == bot_hand[1][-1]])
+        if player_suit_count != bot_suit_count:
+            winner_check(player_suit_count > bot_suit_count, "player") if True else winner_check(True, "bot")
+            return win_reason("held more cards from the suit in position 2.")
 
     player_score, bot_score = score_count(player_hand), score_count(bot_hand)
-    win_pick(player_score > bot_score)
+    winner_check(player_score >= bot_score, "player") if True else winner_check(True, "bot")
+    return win_reason("held a higher average of the card values.")
 
 
 def reset():
-    global suit, deck, mid_card, player_hand, bot_hand, winner, game_started, winner_chosen, turn
+    global suit, deck, mid_card, player_hand, bot_hand, winner, game_started, winner_chosen, turn, win_string
     suit.clear()
     deck.clear()
     mid_card = ""
@@ -196,6 +202,7 @@ def reset():
     game_started = False
     winner_chosen = False
     turn = 6
+    win_string = ""
 
 
 def play_game() -> None:
@@ -261,6 +268,7 @@ deck = []
 mid_card = ""
 player_hand = []
 bot_hand = []
+win_string = ""
 winner = {"player": False, "bot": False}
 main_loop = True
 game_started = False
