@@ -45,16 +45,15 @@ def deck_string(deck, suit) -> str:
 def print_winner(winner, win_string, player_hand, bot_hand) -> None:
     string1 = ("You are the winner!!!" if winner["player"] else "You lose! Bot won...")
     string2 = "This is because " + win_string
-    max_len = max(len(string1), len(string2))
 
-    upper_border = "┏━" + ("━" * max_len) + "━┓\n"
-    sides1 = "┃ " + string1 + (" " * (max_len - len(string1))) + " ┃\n"
-    sides2 = "┃ " + string2 + " ┃\n"
-    lower_border = "┗━" + ("━" * max_len) + "━┛"
-    print(upper_border + sides1 + sides2 + lower_border)
+    upper_border = "┏━" + ("━" * len(string1)) + "━┓\n"
+    sides1 = "┃ " + string1 + " ┃\n"
+    lower_border = "┗━" + ("━" * len(string1)) + "━┛"
+    print(upper_border + sides1 + lower_border)
+    print(string2)
     if player_hand and bot_hand:
-        print(f"  Your hand was:\t{show_cards(player_hand)}\n"
-              f"  Bot's hand was:\t{show_cards(bot_hand)}")
+        print(f"Your hand was:\t{show_cards(player_hand)}\n"
+              f"Bot's hand was:\t{show_cards(bot_hand)}")
 
 
 def game_menu(game_started, turn_count=None, choice=None, deck=None, suit=None,
@@ -196,7 +195,7 @@ def check_result(suit, player_hand, bot_hand, winner) -> str:
     # Check if player/bot holds a higher average of the card’s value.
     player_score, bot_score = score_count(player_hand), score_count(bot_hand)
     winner_check(player_score >= bot_score, "player", winner) if True else winner_check(True, "bot", winner)
-    return win_reason("had a higher score. "
+    return win_reason("had a higher score.\n"
                       f"Your score was {round(player_score, 2)}, & bot's score was {round(bot_score, 2)}.",
                       player_hand, bot_hand, winner)
 
