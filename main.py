@@ -42,13 +42,23 @@ def deck_string(deck, suit) -> str:
     return string + "\nThe deck has now been shuffled. Game has begun!!"
 
 
-def print_winner(winner, win_string) -> None:
-    print("\n" + ("You are the winner!!!" if winner["player"] else "You lose! Bot won...") +
-          "\nThis is because " + win_string)
+def print_winner(winner, win_string, player_hand, bot_hand) -> None:
+    string1 = ("You are the winner!!!" if winner["player"] else "You lose! Bot won...")
+    string2 = "This is because " + win_string
+    max_len = max(len(string1), len(string2))
+
+    upper_border = "┏━" + ("━" * max_len) + "━┓\n"
+    sides1 = "┃ " + string1 + (" " * (max_len - len(string1))) + " ┃\n"
+    sides2 = "┃ " + string2 + " ┃\n"
+    lower_border = "┗━" + ("━" * max_len) + "━┛"
+    print(upper_border + sides1 + sides2 + lower_border)
+    if player_hand and bot_hand:
+        print(f"  Your hand was:\t{show_cards(player_hand)}\n"
+              f"  Bot's hand was:\t{show_cards(bot_hand)}")
 
 
 def game_menu(game_started, turn_count=None, choice=None, deck=None, suit=None,
-              player_hand=None, winner=None, win_string=None) -> None:
+              player_hand=None, winner=None, win_string=None, bot_hand=None) -> None:
     if choice:
         if choice[0] == 6:
             print("Exiting...")
@@ -64,7 +74,7 @@ def game_menu(game_started, turn_count=None, choice=None, deck=None, suit=None,
         elif choice[0] == 4:
             print("\nYour current hand is " + show_cards(player_hand))
         elif choice[0] == 5:
-            print_winner(winner, win_string)
+            print_winner(winner, win_string, player_hand, bot_hand)
 
     game_state_check(game_started, None if not choice else choice[0], turn_count)
 
@@ -151,8 +161,7 @@ def win_reason(reason, player_hand, bot_hand, winner):
     if not reason:
         win_string += "you had an empty hand." if winner["bot"] else "bot had an empty hand."
     else:
-        win_string += ("you " if winner["player"] else "bot ") + reason + \
-                      f"\nYour hand was:\t {show_cards(player_hand)}\nBot's hand was:\t {show_cards(bot_hand)}"
+        win_string += ("you " if winner["player"] else "bot ") + reason
     return win_string
 
 
@@ -187,8 +196,8 @@ def check_result(suit, player_hand, bot_hand, winner) -> str:
     # Check if player/bot holds a higher average of the card’s value.
     player_score, bot_score = score_count(player_hand), score_count(bot_hand)
     winner_check(player_score >= bot_score, "player", winner) if True else winner_check(True, "bot", winner)
-    return win_reason("had a higher score.\n"
-                      f"Your score was {round(player_score, 2)}, & bot's score was {round(bot_score, 2)}.\n",
+    return win_reason("had a higher score. "
+                      f"Your score was {round(player_score, 2)}, & bot's score was {round(bot_score, 2)}.",
                       player_hand, bot_hand, winner)
 
 
@@ -237,7 +246,7 @@ def play_game(mid_card, game_started, turn_count, deck, suit, player_hand, bot_h
         turn_count, pick = TURN, [5, 1]
 
     game_menu(game_started, turn_count, pick,
-              deck, suit, player_hand, winner, win_string)
+              deck, suit, player_hand, winner, win_string, bot_hand)
 
     if not game_started and pick[0] == 1:
         shuffle_deck(mid_card, game_started, deck, suit)
