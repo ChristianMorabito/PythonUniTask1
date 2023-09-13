@@ -47,7 +47,7 @@ def print_winner(winner, win_string, player_hand, bot_hand) -> None:
     string2 = "This is because " + win_string
 
     upper_border = "┏━" + ("━" * len(string1)) + "━┓\n"
-    sides1 = "┃ " + string1 + " ┃\n"
+    sides1 = " " + string1 + "\n"
     lower_border = "┗━" + ("━" * len(string1)) + "━┛"
     print(upper_border + sides1 + lower_border)
     print(string2)
