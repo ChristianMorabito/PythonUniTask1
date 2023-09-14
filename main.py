@@ -1,16 +1,17 @@
 import random as r
 
-# TODO: IF HAND IS EMPTY THEN HAVE IT NOT PRINT BOTH PLAYER AND BOTS CARDS
 # TODO: MAKE IT SO THAT SYMBOLS OPTION IS SHOWN AT BEGINNING OF NEW GAME
+# TODO: HAVE HAPPY/SAD EMOJI AT END WITH WIN/LOSS MSG
+# TODO: PUT BORDER / EMOJIS AROUND OUTPUT BEFORE THE MENU TO DRAW ATTN THERE
 
 
-def game_state_check(choice) -> bool:
+def game_state_check(choice_arg) -> None:
     main_option = ("Welcome to card game. You have the following options\n"
                    "1. start game (+ OPTIONS ALLOWED)\n"
                    "2. pick a card\n"
                    "3. shuffle deck\n"
                    "4. show my cards\n"
-                   "5. check win or lose\n"
+                   "5. check win/lose\n"
                    "6. exit\n")
 
 
@@ -18,19 +19,20 @@ def game_state_check(choice) -> bool:
                    "Type: 1 1 for default:     ♥ ♦ ♣ ♠\n"
                    "      1 2 for expressions: 😃 😈 😵 🤢 😨\n"
                    "      1 3 for wacky:       🤡 👹 👺 👻 👽 👾 🤖\n")
-    if not choice:
-        print("\n" + main_option)
+
+    game_running = "\n_____________🟢Game Currently Running🟢____________\n"
+    game_already_started = "\n_____________🚨Game ALREADY started!🚨______________\n"
+    game_not_started = "\n_______________🚨Game NOT started!🚨________________\n"
+    line = "\n___________________________________________________________\n"
+    if not choice_arg:
+        print(line + main_option)
         print(suit_option)
-    elif choice == 1 and game_started:
-        print("\n_________________Game ALREADY started!_________________\n")
-        print(main_option)
-    elif 1 < choice < 6 and not game_started:
-        print("\n___________________Game NOT started!___________________\n")
-        print(main_option)
-        print(suit_option)
+    elif choice_arg == 1 and game_started:
+        print(game_already_started + main_option)
+    elif 1 < choice_arg < 6 and not game_started:
+        print(game_not_started + main_option + suit_option)
     else:
-        print("\n_______________________________________________________\n")
-        print(main_option)
+        print(game_running + main_option)
 
 
 def deck_print() -> str:
@@ -38,14 +40,14 @@ def deck_print() -> str:
                                            "'expressions'" if suits == SUITS_2 else
                                            "'wacky'") + " deck.\n\n"
     for i, card in enumerate(deck):
-        if i == 0 or i % len(VALUES) != len(VALUES) - 1:
-            deck_string += card + "  \t"
-        else:
-            deck_string += card + "\n"
-    return deck_string + "\nThe deck has now been shuffled. Game has begun!!"
+        deck_string += (card + "  \t") if i == 0 or i % len(VALUES) != len(VALUES) - 1 else (card + "\n")
+
+    return deck_string + ("\nThe deck has now been shuffled. Game has begun!!\n"
+                          "You may pick a card up to 6 times, "
+                          "or 'check win/lose' to end the game earlier.")
 
 
-def game_menu(choice=None) -> None:
+def game_menu() -> None:
     if choice:
         if choice[0] == 6:
             print("Exiting...")
@@ -57,21 +59,22 @@ def game_menu(choice=None) -> None:
             print("\nCard Selected:\tYou picked " + picked_card +
                   ("\nYou have 1 last turn!" if turn == 1 else ""))
         elif choice[0] == 3:
-            print("\nCards sHuFfLeD")
+            print("\n~^~Cards sHuFfLeD~^~")
         elif choice[0] == 4:
             print("\nYour current hand is ", end="")
             show_cards(player_hand)
         elif choice[0] == 5:
-            print("\n" + ("You are the winner!!!" if winner["player"] else "You lose! Bot won...") +
-                  "\nThis is because " + win_string)
-            print(f"Your hand was:\t", end="")
+            print(win_string)
+            if player_hand and bot_hand:
+                print(f"➕ PLAYER hand:\t", end="")
             show_cards(player_hand)
-            print(f"Bot's hand was:\t", end="")
+            print(f"➕ BOT hand:\t", end="")
             show_cards(bot_hand)
-            input("\nPress ENTER")
+
+        if choice[0] != 1:
+            input("\nPress ENTER\t")
 
     game_state_check(None if not choice else choice[0])
-
 
 
 def create_deck(deck, suits, values) -> None:
@@ -127,7 +130,7 @@ def pick_card(deck) -> str:
     return popped_card
 
 
-def show_cards(player_cards) -> str:
+def show_cards(player_cards) -> None:
     print(" ".join(player_cards) if player_cards else "empty.")
 
 
@@ -159,45 +162,63 @@ def winner_check(condition, player) -> bool:
 def win_reason(reason):
     global win_string
 
+    win_string += ("\n" + ("😊 You are the winner!!! 😊" if winner["player"] else "☹️ You lose! Bot won... ☹️") +
+                   "\nBecause ")
+
     if not reason:
         win_string += "you had an empty hand." if winner["bot"] else "bot had an empty hand."
-
     else:
         win_string += ("you " if winner["player"] else "bot ") + reason
 
 
+def check_result(player_cards, robot_cards, suits) -> bool:
 
-def check_result() -> None:
-    if winner_check(not player_hand, "bot") or winner_check(not bot_hand, "player"):
-        return win_reason(None)
+    def sequence():
+        if winner_check(not player_cards, "bot") or winner_check(not robot_cards, "player"):
+            return win_reason(None)
 
-    if len(player_hand) >= len(suits):
-        player_suit_value_count = suit_value_check(player_hand)
-        bot_suit_value_count = suit_value_check(bot_hand)
+        if len(player_cards) >= len(suits):
+            player_suit_value_count = suit_value_check(player_cards)
+            bot_suit_value_count = suit_value_check(robot_cards)
 
-        if winner_check(player_suit_value_count == len(suits), "player") or \
-           winner_check(bot_suit_value_count == len(suits), "bot"):
-            return win_reason("held the same value card for all defined suits.")
+            if (winner_check(player_suit_value_count == len(suits), "player") or
+                    winner_check(bot_suit_value_count == len(suits), "bot")):
+                return win_reason("held the same value card for all defined suits.")
 
-        if winner_check(player_suit_value_count == len(suits)-1, "player") or \
-           winner_check(bot_suit_value_count == len(suits)-1, "bot"):
-            return win_reason(f"held the same value card for {len(suits)-1} consecutive suits.")
 
-    if len(player_hand) > 2:
-        player_suit_count = len([item for item in player_hand[2:] if item[-1] == player_hand[1][-1]])
-        bot_suit_count = len([item for item in bot_hand[2:] if item[-1] == bot_hand[1][-1]])
-        if player_suit_count != bot_suit_count:
-            winner_check(player_suit_count > bot_suit_count, "player") if True else winner_check(True, "bot")
-            return win_reason("held more cards from the suit in position 2.")
+            if (winner_check(player_suit_value_count == len(suits)-1, "player") or
+                    winner_check(bot_suit_value_count == len(suits)-1, "bot")):
+                return win_reason(f"held the same value card for {len(suits)-1} consecutive suits.")
 
-    player_score, bot_score = score_count(player_hand), score_count(bot_hand)
-    winner_check(player_score >= bot_score, "player") if True else winner_check(True, "bot")
-    return win_reason("held a higher average of the card values.")
+
+        if len(player_cards) > 2:
+            player_suit_count = len([item for item in player_cards[2:] if item[-1] == player_cards[1][-1]])
+            bot_suit_count = len([item for item in robot_cards[2:] if item[-1] == robot_cards[1][-1]])
+            if player_suit_count != bot_suit_count:
+                (winner_check(player_suit_count > bot_suit_count, "player") if True else
+                 winner_check(True, "bot"))
+                return win_reason("held more cards from the suit in position 2.")
+
+        player_score, bot_score = score_count(player_cards), score_count(robot_cards)
+        winner_check(player_score >= bot_score, "player") if True else winner_check(True, "bot")
+        reason = ""
+        if player_score != bot_score:
+            higher_score, lower_score = max(player_score, bot_score), min(player_score, bot_score)
+            reason += (f"held a higher score of {round(higher_score, 2)},\n"
+                       f"whilst " + ("you " if player_score < bot_score else "bot ") +
+                       f"held a lower score of {round(lower_score, 2)}.")
+        else:
+            reason += ('drew with the bot,\nso you are "technically" still the "winner".\n'
+                       f'You both scored {round(player_score, 2)}.')
+        win_reason(reason)
+
+    sequence()
+    return winner["player"]
 
 
 def reset():
     global suits, deck, mid_card, player_hand, bot_hand, winner, \
-           game_started, winner_chosen, turn, win_string, picked_card
+           game_started, turn, win_string, picked_card, choice
     suits.clear()
     deck.clear()
     mid_card = ""
@@ -206,14 +227,14 @@ def reset():
     winner["player"] = False
     winner["bot"] = False
     game_started = False
-    winner_chosen = False
     turn = 6
     win_string = ""
     picked_card = ""
 
 
+
 def play_game() -> None:
-    global game_started, main_loop, winner_chosen, picked_card
+    global turn, game_started, main_loop, picked_card, choice
     pick = []
 
     while True:
@@ -246,13 +267,14 @@ def play_game() -> None:
         picked_card = pick_card(deck)
     elif pick[0] == 3:
         shuffle_deck(deck, suits)
-    if turn == 0 or pick[0] == 5:
-        check_result()
-        winner_chosen = True
     elif pick[0] == 6:
         main_loop = False
 
-    game_menu([5] if turn == 0 else pick)
+    if turn == 0 or pick[0] == 5:
+        check_result(player_hand, bot_hand, suits)
+        turn = 0  # force turn variable to 0 to end game.
+    choice = [5] if turn == 0 else pick
+    game_menu()
     if not game_started and pick[0] == 1:
         shuffle_deck(deck, suits)
         game_started = True
@@ -262,9 +284,8 @@ def main():
     game_menu()
     while main_loop:
         play_game()
-        if winner_chosen:
+        if turn == 0:
             reset()
-
 
 
 SUITS_1 = ["♥", "♦", "♣", "♠"]
@@ -273,15 +294,15 @@ SUITS_3 = ["🤡", "👹", "👺", "👻", "👽", "👾", "🤖"]
 VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 suits = []
 deck = []
-mid_card = ""
-picked_card = ""
 player_hand = []
 bot_hand = []
+choice = []
+mid_card = ""
+picked_card = ""
 win_string = ""
 winner = {"player": False, "bot": False}
 main_loop = True
 game_started = False
-winner_chosen = False
 turn = 6
 
 
