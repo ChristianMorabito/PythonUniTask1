@@ -44,20 +44,16 @@ def game_state_string(choice_arg) -> str:
 
 def deck_string() -> str:
     """
-    Function to return string which notifies suit selection & elegantly presents the deck.
+    Function return a string which elegantly presents the deck.
     :return returns string to print
     """
 
-    text_and_deck = "\nYou selected the " + ("'default'" if suits == SUITS_1 else
-                                             "'expressions'" if suits == SUITS_2 else
-                                             "'wacky'") + " deck.\n\n"
+    text_and_deck = ""
 
     for i, card in enumerate(deck):  # loop to elegantly present the deck of cards.
         text_and_deck += (card + "  \t") if i == 0 or i % len(VALUES) != len(VALUES) - 1 else (card + "\n")
 
-    return text_and_deck + ("\nThe deck has now been shuffled. Game has begun!!\n"
-                            "You may pick a card up to 6 times, "
-                            "or 'check win/lose' to end the game earlier.")
+    return text_and_deck
 
 
 def game_menu() -> None:
@@ -68,13 +64,19 @@ def game_menu() -> None:
             print("Exiting...")
             return
         elif choice[0] == 1 and not game_started:  # if game hasn't started & player presses 1 to start the game,
+            print("\nYou selected the " + ("'default'" if suits == SUITS_1 else
+                                           "'expressions'" if suits == SUITS_2 else
+                                           "'wacky'") + " deck.\n")
             print(deck_string())  # then print deck
+            print("The deck has now been shuffled. Game has begun!!\nYou may pick a card up to 6 times, "
+                  "or 'check win/lose' to end the game earlier.")
 
     if game_started:
         if choice[0] == 2:  # card picked from deck
             print("\nCard Selected:\tYou picked " + picked_card)
         elif choice[0] == 3:  # deck shuffled
-            print("\n~^~Cards sHuFfLeD~^~")
+            print("\n" + deck_string())
+            print("\n~^~Cards sHuFfLeD~^~", end="")
         elif choice[0] == 4:  # print player's hand of cards
             print("\nYour current hand is ", end="")
             show_cards(player_hand)
@@ -106,8 +108,16 @@ def create_deck(deck, suits, values) -> None:
 
 
 def shuffle_deck(deck, suits) -> None:
+    """
+    Func to place 'A_1st_suit, Q_mid_suit, & K_last_suit in the
+    1st, mid & last positions of the deck. Once this is established,
+    then the
+    :param deck:
+    :param suits:
+    :return:
+    """
     global mid_card
-    low, mid, high = 0, (len(deck) - 1) // 2, len(deck) - 1
+    low, mid, high = 0, (len(deck) + 1) // 2, len(deck) - 1
     if suits and not game_started:
         low_suits, mid_suits, high_suits = 0, (len(suits) - 1) // 2, len(suits) - 1
         a_card = deck.index("A" + suits[low_suits])
