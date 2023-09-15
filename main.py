@@ -1,11 +1,19 @@
 import random as r
 
-# TODO: MAKE IT SO THAT SYMBOLS OPTION IS SHOWN AT BEGINNING OF NEW GAME
-# TODO: HAVE HAPPY/SAD EMOJI AT END WITH WIN/LOSS MSG
-# TODO: PUT BORDER / EMOJIS AROUND OUTPUT BEFORE THE MENU TO DRAW ATTN THERE
 
+def game_state_string(choice_arg) -> str:
+    """
+    Func to return a string of: title, suit options & game msgs, based on input & game state.
+    :param choice_arg: accepts int that represents the choice input from game_menu() function
+    :return returns string to print
+    """
 
-def game_state_check(choice_arg) -> None:
+    title = """
+    ▒█▀▀█ ░█▀▀█ ▒█▀▀█ ▒█▀▀▄ 　 ▒█▀▀█ ░█▀▀█ ▒█▀▄▀█ ▒█▀▀▀ 
+    ▒█░░░ ▒█▄▄█ ▒█▄▄▀ ▒█░▒█ 　 ▒█░▄▄ ▒█▄▄█ ▒█▒█▒█ ▒█▀▀▀ 
+    ▒█▄▄█ ▒█░▒█ ▒█░▒█ ▒█▄▄▀ 　 ▒█▄▄█ ▒█░▒█ ▒█░░▒█ ▒█▄▄▄
+                      ...verse against the computer...\n"""
+
     main_option = ("Welcome to card game. You have the following options\n"
                    "1. start game (+ OPTIONS ALLOWED)\n"
                    "2. pick a card\n"
@@ -13,7 +21,6 @@ def game_state_check(choice_arg) -> None:
                    "4. show my cards\n"
                    "5. check win/lose\n"
                    "6. exit\n")
-
 
     suit_option = ("OPTIONS: select between 3 different suit types\n"
                    "Type: 1 1 for default:     ♥ ♦ ♣ ♠\n"
@@ -23,61 +30,78 @@ def game_state_check(choice_arg) -> None:
     game_running = "\n_____________🟢Game Currently Running🟢____________\n"
     game_already_started = "\n_____________🚨Game ALREADY started!🚨______________\n"
     game_not_started = "\n_______________🚨Game NOT started!🚨________________\n"
-    line = "\n___________________________________________________________\n"
-    if not choice_arg:
-        print(line + main_option)
-        print(suit_option)
-    elif choice_arg == 1 and game_started:
-        print(game_already_started + main_option)
-    elif 1 < choice_arg < 6 and not game_started:
-        print(game_not_started + main_option + suit_option)
+    line = "___________________________________________________________\n"
+
+    if choice_arg == 1 and game_started:  # if player presses '1' to start game when game has already started
+        return game_already_started + main_option
+    elif not choice_arg or turn == 0:  # if game hasn't started, so title & suit options are presented
+        return line + title + line + main_option + "\n" + suit_option
+    elif 1 < choice_arg < 6 and not game_started:  # if player is attempting to make a choice when game hasn't started
+        return game_not_started + main_option + suit_option
     else:
-        print(game_running + main_option)
+        return game_running + main_option  # if player makes valid choice whilst game is running
 
 
-def deck_print() -> str:
-    deck_string = "\nYou selected the " + ("'default'" if suits == SUITS_1 else
-                                           "'expressions'" if suits == SUITS_2 else
-                                           "'wacky'") + " deck.\n\n"
-    for i, card in enumerate(deck):
-        deck_string += (card + "  \t") if i == 0 or i % len(VALUES) != len(VALUES) - 1 else (card + "\n")
+def deck_string() -> str:
+    """
+    Function to return string which notifies suit selection & elegantly presents the deck.
+    :return returns string to print
+    """
 
-    return deck_string + ("\nThe deck has now been shuffled. Game has begun!!\n"
-                          "You may pick a card up to 6 times, "
-                          "or 'check win/lose' to end the game earlier.")
+    text_and_deck = "\nYou selected the " + ("'default'" if suits == SUITS_1 else
+                                             "'expressions'" if suits == SUITS_2 else
+                                             "'wacky'") + " deck.\n\n"
+
+    for i, card in enumerate(deck):  # loop to elegantly present the deck of cards.
+        text_and_deck += (card + "  \t") if i == 0 or i % len(VALUES) != len(VALUES) - 1 else (card + "\n")
+
+    return text_and_deck + ("\nThe deck has now been shuffled. Game has begun!!\n"
+                            "You may pick a card up to 6 times, "
+                            "or 'check win/lose' to end the game earlier.")
 
 
 def game_menu() -> None:
-    if choice:
-        if choice[0] == 6:
+    """ Func to print the game menu & all other game based notifications, depending on input & game state """
+
+    if choice:  # if choice[] is not empty
+        if choice[0] == 6:  # if true, then exit game & end function
             print("Exiting...")
             return
-        elif choice[0] == 1 and not game_started:
-            print(deck_print())
+        elif choice[0] == 1 and not game_started:  # if game hasn't started & player presses 1 to start the game,
+            print(deck_string())  # then print deck
+
     if game_started:
-        if choice[0] == 2:
-            print("\nCard Selected:\tYou picked " + picked_card +
-                  ("\nYou have 1 last turn!" if turn == 1 else ""))
-        elif choice[0] == 3:
+        if choice[0] == 2:  # card picked from deck
+            print("\nCard Selected:\tYou picked " + picked_card)
+        elif choice[0] == 3:  # deck shuffled
             print("\n~^~Cards sHuFfLeD~^~")
-        elif choice[0] == 4:
+        elif choice[0] == 4:  # print player's hand of cards
             print("\nYour current hand is ", end="")
             show_cards(player_hand)
-        elif choice[0] == 5:
-            print(win_string)
-            if player_hand and bot_hand:
-                print(f"➕ PLAYER hand:\t", end="")
-            show_cards(player_hand)
-            print(f"➕ BOT hand:\t", end="")
-            show_cards(bot_hand)
+        elif choice[0] == 5:  # game has ended, win/loss is checked
+            print(win_string)   # print the string of info declaring the winner, reason & score
+            if player_hand and bot_hand:  # only print player's & bot's cards, if neither were empty
+                print(f"🔷 PLAYER hand:\t", end="")
+                show_cards(player_hand)
+                print(f"🔷 BOT hand:\t", end="")
+                show_cards(bot_hand)
 
-        if choice[0] != 1:
-            input("\nPress ENTER\t")
+        if 1 < choice[0] < 5:  # only show turn count if input is between 2 & 4 (inclusive)
+            print("\n♥ " + (f"You have {turn} turns left" if turn > 1 else "You have 1 last turn!") + " ♥")
+        input("\nPress ENTER ⏎ \n") if choice[0] > 1 else None  # prevent 'next turn' screen from printing
 
-    game_state_check(None if not choice else choice[0])
+    # print title, suit options &/or game state msgs pertaining to the next turn
+    print(game_state_string(None if not choice else choice[0]))
 
 
 def create_deck(deck, suits, values) -> None:
+    """
+    Func to create deck[] based on suits[] selected & values.
+    Note: deck, suits & values are references to global variables
+    :param deck: empty list to hold the deck of cards
+    :param suits: list of suits that player chose
+    :param values: list of default values to merge with suits
+    """
     deck.extend([f"{value}{card}" for card in suits for value in values])
 
 
@@ -162,13 +186,13 @@ def winner_check(condition, player) -> bool:
 def win_reason(reason):
     global win_string
 
-    win_string += ("\n" + ("😊 You are the winner!!! 😊" if winner["player"] else "☹️ You lose! Bot won... ☹️") +
-                   "\nBecause ")
+    win_string += ("\n" + ("😊___YOU ARE THE WINNER___😊" if winner["player"] else "☹️_____YOU LOST_____☹️") +
+                   "\n")
 
     if not reason:
-        win_string += "you had an empty hand." if winner["bot"] else "bot had an empty hand."
+        win_string += "You had an empty hand." if winner["bot"] else "Bot had an empty hand."
     else:
-        win_string += ("you " if winner["player"] else "bot ") + reason
+        win_string += ("You " if winner["player"] else "Bot ") + reason
 
 
 def check_result(player_cards, robot_cards, suits) -> bool:
@@ -185,11 +209,9 @@ def check_result(player_cards, robot_cards, suits) -> bool:
                     winner_check(bot_suit_value_count == len(suits), "bot")):
                 return win_reason("held the same value card for all defined suits.")
 
-
             if (winner_check(player_suit_value_count == len(suits)-1, "player") or
                     winner_check(bot_suit_value_count == len(suits)-1, "bot")):
                 return win_reason(f"held the same value card for {len(suits)-1} consecutive suits.")
-
 
         if len(player_cards) > 2:
             player_suit_count = len([item for item in player_cards[2:] if item[-1] == player_cards[1][-1]])
@@ -197,15 +219,15 @@ def check_result(player_cards, robot_cards, suits) -> bool:
             if player_suit_count != bot_suit_count:
                 (winner_check(player_suit_count > bot_suit_count, "player") if True else
                  winner_check(True, "bot"))
-                return win_reason("held more cards from the suit in position 2.")
+                return win_reason("held more '2nd position suit' cards.")
 
         player_score, bot_score = score_count(player_cards), score_count(robot_cards)
         winner_check(player_score >= bot_score, "player") if True else winner_check(True, "bot")
         reason = ""
         if player_score != bot_score:
             higher_score, lower_score = max(player_score, bot_score), min(player_score, bot_score)
-            reason += (f"held a higher score of {round(higher_score, 2)},\n"
-                       f"whilst " + ("you " if player_score < bot_score else "bot ") +
+            reason += (f"held a higher score of {round(higher_score, 2)};\n" +
+                       (f"you " if player_score < bot_score else "bot ") +
                        f"held a lower score of {round(lower_score, 2)}.")
         else:
             reason += ('drew with the bot,\nso you are "technically" still the "winner".\n'
@@ -219,6 +241,7 @@ def check_result(player_cards, robot_cards, suits) -> bool:
 def reset():
     global suits, deck, mid_card, player_hand, bot_hand, winner, \
            game_started, turn, win_string, picked_card, choice
+
     suits.clear()
     deck.clear()
     mid_card = ""
@@ -230,7 +253,6 @@ def reset():
     turn = 6
     win_string = ""
     picked_card = ""
-
 
 
 def play_game() -> None:
@@ -251,6 +273,7 @@ def play_game() -> None:
     if pick[0] == 1:
         second_input = 1
         pick.append(second_input)
+
         if pick[0] == 1 and len(player_input) > 1:
             try:
                 if 1 < int(player_input[1]) < 4:
@@ -270,7 +293,7 @@ def play_game() -> None:
     elif pick[0] == 6:
         main_loop = False
 
-    if turn == 0 or pick[0] == 5:
+    if game_started and (turn == 0 or pick[0] == 5):
         check_result(player_hand, bot_hand, suits)
         turn = 0  # force turn variable to 0 to end game.
     choice = [5] if turn == 0 else pick
