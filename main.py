@@ -191,31 +191,62 @@ def pick_card(deck) -> str:
 
 
 def show_cards(player_cards) -> None:
+    """
+    Func to print the list 'player_cards' as a formatted string
+    @param player_cards: accepts list of player cards
+    """
+    # prints cards as a string, 1 space apart. If list is empty, then prints 'empty'.
     print(" ".join(player_cards) if player_cards else "empty.")
 
 
 def suit_value_check(hand) -> int:
+    """
+    Func to count the no. of times a player holds
+    the same value card for all the defined suits
+    @param hand: accepts a list of cards (str) to check
+    @return: returns a count as an int
+    """
+
+    # 1) dict. comprehension below creates a dictionary that holds each card value & and pairs it with set()
+    # e.g. hand = ['A♥', '5♦', '8♣', '10♠']; hand_values = {'A': set(), '5': set(), '8': set(), '10': set()}
     hand_values = {card[:-1]: set() for card in hand}
     count = 0
     for i, value in enumerate(hand_values):
         for j in range(i, len(hand)):
-            curr_value, curr_suit = hand[j][:-1], hand[j][-1]
+            curr_value, curr_suit = hand[j][:-1], hand[j][-1]  # eg. in ['A♥'], curr_value == 'A'; curr_suit == '♥'
             if value == curr_value:
+                # add the curr_suit into the set() of the dict. key -> curr_value
                 hand_values[value].add(curr_suit)
+        # record if this is the largest count thus far.
         count = max(count, len(hand_values[value]))
     return count
 
 
 def score_count(hand):
-    card_value = {"A": 1, "J": 11, "Q": 12, "K": 13}
+    """
+    Func to return the score of the inputted hand.
+    The score is the average
+    @param hand: accepts a list of cards (str) to check
+    @return: returns the average as an int
+    """
+    # dict. below is used to assign a number with the card value, if the card value is a letter (not digit).
+    face = {"A": 1, "J": 11, "Q": 12, "K": 13}
     count = 0
     for card in hand:
-        count += int(card[:-1] if card[:-1].isdigit() else card_value[card[:-1]])
-    return count / len(hand)
+        value = card[:-1]  # e.g. if card == 'A♥', then card[:-1] == 'A'; therefore value == 'A'
+        # if value is digit, e.g. '5', then convert to str; if not digit ('face value'), then refer to dict face value
+        count += int(value) if value.isdigit() else face[value]
+    return count / len(hand)  # returns average
 
 
 def winner_check(condition, player) -> bool:
-    winner[player] = condition
+    """
+    Func to return simple boolean based on player's win state.
+    @param condition: condition is a boolean expression
+    @param player: player refers to either 'player' or 'bot'
+    @return: returns True or False depending on win state.
+    """
+    winner[player] = condition  # returns True or False, depending on condition expression.
     return condition
 
 
