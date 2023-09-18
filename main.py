@@ -163,7 +163,7 @@ def shuffle_deck(deck, suits) -> None:
         deck[low], deck[a_card] = deck[a_card], deck[low]  # place the 3 cards in appropriate positions within the deck
         deck[mid], deck[q_card] = deck[q_card], deck[mid]
         deck[high], deck[k_card] = deck[k_card], deck[high]
-        mid_card = deck[mid]
+        mid_card = deck[mid]  # establish mid_card to make sure it's avoided when pick_card() function is called
 
     if game_started:  # this condition is only true when player has started the game & wants to manually shuffle
         temp_deck = deck[low + 1:high]  # create temp deck which is a copy of deck, but avoiding 1st & last cards
