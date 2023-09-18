@@ -8,7 +8,25 @@ combination of cards against the computer. This program was created
 as a student assessment at Monash University, ITO4133: Intro. to Python
 """
 
+
 import random as r
+
+SUITS_1 = ["♥", "♦", "♣", "♠"]
+SUITS_2 = ["😃", "😈", "😵", "🤢", "😨"]
+SUITS_3 = ["🤡", "👹", "👺", "👻", "👽", "👾", "🤖"]
+VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+suits = []
+deck = []
+player_hand = []
+bot_hand = []
+choice = []
+mid_card = ""
+picked_card = ""
+win_string = ""
+winner = {"player": False, "bot": False}
+main_loop = True
+game_started = False
+turn = 6
 
 
 def game_state_string(choice_arg) -> str:
@@ -425,23 +443,6 @@ def main():
         if turn == 0:
             reset()
 
-
-SUITS_1 = ["♥", "♦", "♣", "♠"]
-SUITS_2 = ["😃", "😈", "😵", "🤢", "😨"]
-SUITS_3 = ["🤡", "👹", "👺", "👻", "👽", "👾", "🤖"]
-VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
-suits = []
-deck = []
-player_hand = []
-bot_hand = []
-choice = []
-mid_card = ""
-picked_card = ""
-win_string = ""
-winner = {"player": False, "bot": False}
-main_loop = True
-game_started = False
-turn = 6
 
 if __name__ == '__main__':
     main()
