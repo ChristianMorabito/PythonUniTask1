@@ -1,12 +1,11 @@
 """
 Name:          Christian Morabito
-Student ID:    cmor0056
+Student ID:    22298827
 Last modified: 18/09/23
 
 This program is a simple card where the user has to select a winning
 combination of cards against the computer. This program was created
 as a student assessment at Monash University, ITO4133: Intro. to Python
-
 """
 
 import random as r
@@ -97,7 +96,7 @@ def game_menu() -> None:
             show_cards(player_hand)
         elif choice[0] == 5:  # game has ended, win/loss is checked
             print("\n___________________🔵GAME OVER🔵__________________")
-            print(win_string)   # print the string of info declaring the winner, reason & score
+            print(win_string)  # print the string of info declaring the winner, reason & score
             if player_hand and bot_hand:  # only print player's & bot's cards, if neither were empty
                 print(f"🔷 PLAYER hand:\t", end="")
                 show_cards(player_hand)
@@ -123,6 +122,7 @@ def create_deck(deck, suits, values) -> None:
     :param suits: list of suits that player chose
     :param values: list of default values to merge with suits
     """
+
     deck.extend([f"{value}{card}" for card in suits for value in values])
 
 
@@ -134,6 +134,7 @@ def shuffle_deck(deck, suits) -> None:
     :param deck: accepts deck list (str)
     :param suits: accepts suits list (str)
     """
+
     global mid_card
     low, mid, high = 0, (len(deck) + 1) // 2, len(deck) - 1  # establish L/M/H points in the deck
     if suits and not game_started:  # this condition is only true once deck is 1st created
@@ -152,7 +153,7 @@ def shuffle_deck(deck, suits) -> None:
         temp_deck = [deck[low]] + temp_deck + [deck[high]]  # place the 1st & last cards from deck into temp deck
         deck.clear()  # erase contents of deck
         deck.extend(temp_deck)  # fill deck with temp deck contents
-        q_card = deck.index(mid_card) # find the new index of the original middle card
+        q_card = deck.index(mid_card)  # find the new index of the original middle card
         deck[q_card], deck[mid] = deck[mid], deck[q_card]  # swap it back into the middle
 
 
@@ -162,12 +163,14 @@ def pick_card(deck) -> str:
     :param deck: accepts deck list
     :return: returns string of removed card
     """
+
     global turn, game_started
     if not game_started:
         return ""
 
     def avoid_mid_card():
         """This function ensures that the middle card is not collected"""
+
         while True:
             # random_int is an index from 2nd card to 2nd last card (inc.)
             # this is to avoid the special 1st & last cards
@@ -195,7 +198,8 @@ def show_cards(player_cards) -> None:
     Func to print the list 'player_cards' as a formatted string
     @param player_cards: accepts list of player cards
     """
-    # prints cards as a string, 1 space apart. If list is empty, then prints 'empty'.
+
+    # prints cards as a string, 1 space between each card. If list is empty, then prints 'empty'.
     print(" ".join(player_cards) if player_cards else "empty.")
 
 
@@ -229,6 +233,7 @@ def score_count(hand):
     @param hand: accepts a list of cards (str) to check
     @return: returns the average as an int
     """
+
     # dict. below is used to assign a number with the card value, if the card value is a letter (not digit).
     face = {"A": 1, "J": 11, "Q": 12, "K": 13}
     count = 0
@@ -246,11 +251,17 @@ def winner_check(condition, player) -> bool:
     @param player: player refers to either 'player' or 'bot'
     @return: returns True or False depending on win state.
     """
+
     winner[player] = condition  # returns True or False, depending on condition expression.
     return condition
 
 
 def win_reason(reason):
+    """
+    Func to create a string message, based on the win/loss state of the game.
+    @param reason: accepts string which gives reason for win/loss
+    """
+
     global win_string
 
     win_string += ("\n" + ("😊___YOU ARE THE WINNER___😊" if winner["player"] else "☹️_____YOU LOST_____☹️") +
@@ -263,33 +274,56 @@ def win_reason(reason):
 
 
 def check_result(player_cards, robot_cards, suits) -> bool:
+    """
+    Func to return boolean based on player's win-state.
+    @param player_cards: accepts list (str) of player's held card
+    @param robot_cards: accepts list (str) of bot's held card
+    @param suits: accepts list (str) of the selected suits
+    @return: returns boolean based on player's win-state
+    """
 
-    def sequence():
+    def priority_order():
+        """
+        Nested function to sequentially compare the combination
+        of cards held by the player and the robot to determine if
+        the player has won the game order of priority:
+        Rule 1 > Rule 2 > Rule 3 > Rule 4
+        @return: returns None
+        """
+
+        # First check if player/bot have empty hands.
         if winner_check(not player_cards, "bot") or winner_check(not robot_cards, "player"):
             return win_reason(None)
 
-        if len(player_cards) >= len(suits):
-            player_suit_value_count = suit_value_check(player_cards)
-            bot_suit_value_count = suit_value_check(robot_cards)
+        # RULE 1 & RULE 2 check:
+        if len(player_cards) >= len(suits):  # rule can only be checked if this is true
+            player_suit_value_count = suit_value_check(player_cards)  # returns int
+            bot_suit_value_count = suit_value_check(robot_cards)  # returns int
 
+            # RULE 1: player holds the same value card for all the defined suits
             if (winner_check(player_suit_value_count == len(suits), "player") or
-                    winner_check(bot_suit_value_count == len(suits), "bot")):
+                    winner_check(bot_suit_value_count == len(suits), "bot")):  # if either are True, func ends
                 return win_reason("held the same value card for all defined suits.")
 
-            if (winner_check(player_suit_value_count == len(suits)-1, "player") or
-                    winner_check(bot_suit_value_count == len(suits)-1, "bot")):
-                return win_reason(f"held the same value card for {len(suits)-1} consecutive suits.")
+            # RULE 2: player holds the same value card for all the defined suits, minus 1
+            if (winner_check(player_suit_value_count == len(suits) - 1, "player") or
+                    winner_check(bot_suit_value_count == len(suits) - 1, "bot")):  # if either are True, func ends
+                return win_reason(f"held the same value card for {len(suits) - 1} consecutive suits.")
 
-        if len(player_cards) > 2:
+        # RULE 3: check
+        if len(player_cards) > 2:  # rule can only be checked if this is true
+            # RULE 3: player holds more cards from the suit in position 2.
             player_suit_count = len([item for item in player_cards[2:] if item[-1] == player_cards[1][-1]])
             bot_suit_count = len([item for item in robot_cards[2:] if item[-1] == robot_cards[1][-1]])
-            if player_suit_count != bot_suit_count:
+            if player_suit_count != bot_suit_count:  # if True, func ends
                 (winner_check(player_suit_count > bot_suit_count, "player") if True else
                  winner_check(True, "bot"))
                 return win_reason("held more '2nd position suit' cards.")
 
         player_score, bot_score = score_count(player_cards), score_count(robot_cards)
         winner_check(player_score >= bot_score, "player") if True else winner_check(True, "bot")
+
+        # RULE 4: player holds a higher average of the card’s value
         reason = ""
         if player_score != bot_score:
             higher_score, lower_score = max(player_score, bot_score), min(player_score, bot_score)
@@ -299,15 +333,17 @@ def check_result(player_cards, robot_cards, suits) -> bool:
         else:
             reason += ('drew with the bot,\nso you are "technically" still the "winner".\n'
                        f'You both scored {round(player_score, 2)}.')
-        win_reason(reason)
+        return win_reason(reason)
 
-    sequence()
+    priority_order()  # call the nested function
     return winner["player"]
 
 
 def reset():
+    """ Func to reset all global variables so player can play another round. """
+
     global suits, deck, mid_card, player_hand, bot_hand, winner, \
-           game_started, turn, win_string, picked_card, choice
+        game_started, turn, win_string, picked_card, choice
 
     suits.clear()
     deck.clear()
@@ -323,8 +359,13 @@ def reset():
 
 
 def play_game() -> None:
+    """
+    Function to control player input & manage all aspects of the game play.
+    This function calls the subsequent functions pertaining to player input.
+    """
+
     global turn, game_started, main_loop, picked_card, choice
-    pick = []
+    pick = []  # this list holds player input
 
     while True:
         try:
@@ -337,7 +378,8 @@ def play_game() -> None:
                 print("Out of range! Try again...")
         except ValueError:
             print("Invalid input! Try again...")
-    if pick[0] == 1:
+
+    if pick[0] == 1:  # player opts to start the game
         second_input = 1
         pick.append(second_input)
 
@@ -349,28 +391,34 @@ def play_game() -> None:
                 pass
             finally:
                 pick[1] = second_input
-        if not game_started:
+
+        if not game_started:  # deck is created once when player enters '1' to start the game
             suits.extend(SUITS_1 if pick[1] == 1 else SUITS_2 if pick[1] == 2 else SUITS_3)
             create_deck(deck, suits, VALUES)
 
-    elif pick[0] == 2:
+    elif pick[0] == 2:  # player opts to pick a card
         picked_card = pick_card(deck)
-    elif pick[0] == 3:
+    elif pick[0] == 3:  # player opts to shuffle deck
         shuffle_deck(deck, suits)
-    elif pick[0] == 6:
+    elif pick[0] == 6:  # player opts to exit program
         main_loop = False
 
+    # player opts to end current game to check if winner or loser
     if game_started and (turn == 0 or pick[0] == 5):
         check_result(player_hand, bot_hand, suits)
         turn = 0  # force turn variable to 0 to end game.
-    choice = [5] if turn == 0 else pick
-    game_menu()
-    if not game_started and pick[0] == 1:
+
+    choice = [5] if turn == 0 else pick  # sets global variable of player choice, based on game state
+    game_menu()  # calls the game menu function to print messages & gfx onto the screen
+
+    if not game_started and pick[0] == 1:  # deck is shuffled implicitly only once, when game has begun.
         shuffle_deck(deck, suits)
-        game_started = True
+        game_started = True  # global variable is updated
 
 
 def main():
+    """ Main function acts as execution point for the program """
+
     game_menu()
     while main_loop:
         play_game()
@@ -394,7 +442,6 @@ winner = {"player": False, "bot": False}
 main_loop = True
 game_started = False
 turn = 6
-
 
 if __name__ == '__main__':
     main()
